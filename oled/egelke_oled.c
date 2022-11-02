@@ -42,84 +42,80 @@ int ssd1306oI2c_send_cmd(oled_canvas_t *c, uint8_t cmd) {
 
     // Co = 1, D/C = 0 => the driver expects a command
     uint8_t buf[2] = {0x80, cmd};
-    i2c_write_blocking(c->hw_addr, (SSD1306OI2C_ADDR & SSD1306OI2C_WRITE_MODE), buf, 2, false);
+    return i2c_write_blocking(c->hw_addr, (SSD1306OI2C_ADDR & SSD1306OI2C_WRITE_MODE), buf, 2, false) == 2 ? PICO_OK : PICO_ERROR_GENERIC;
 }
 
 int ssd1306oI2c_send_buffer(oled_canvas_t *c) {
-    i2c_write_blocking(c->hw_addr, (SSD1306OI2C_ADDR & SSD1306OI2C_WRITE_MODE), c->buffer, c->buffer_len, false);
+    return i2c_write_blocking(c->hw_addr, (SSD1306OI2C_ADDR & SSD1306OI2C_WRITE_MODE), c->buffer, c->buffer_len, false) == c->buffer_len ? PICO_OK : PICO_ERROR_GENERIC;
 }
 
 int init_ssd1306(oled_canvas_t *c) {
-    // some of these commands are not strictly necessary as the reset
-    // process defaults to some of these but they are shown here
-    // to demonstrate what the initialization sequence looks like
+    int ret;
 
-    // some configuration values are recommended by the board manufacturer
-
-    c->send_cmd(c, SSD1306_SET_DISP | 0x00); // set display off
+    ret = c->send_cmd(c, SSD1306_SET_DISP | 0x00); // set display off
 
     /* memory mapping */
-    c->send_cmd(c, SSD1306_SET_MEM_ADDR); // set memory address mode
-    c->send_cmd(c, 0x00); // horizontal addressing mode
+    ret = ret || c->send_cmd(c, SSD1306_SET_MEM_ADDR); // set memory address mode
+    ret = ret || c->send_cmd(c, 0x00); // horizontal addressing mode
 
     /* resolution and layout */
-    c->send_cmd(c, SSD1306_SET_DISP_START_LINE); // set display start line to 0
+    ret = ret || c->send_cmd(c, SSD1306_SET_DISP_START_LINE); // set display start line to 0
 
-    c->send_cmd(c, SSD1306_SET_SEG_REMAP | 0x01); // set segment re-map
+    ret = ret || c->send_cmd(c, SSD1306_SET_SEG_REMAP | 0x01); // set segment re-map
     // column address 127 is mapped to SEG0
 
-    c->send_cmd(c, SSD1306_SET_MUX_RATIO); // set multiplex ratio
-    c->send_cmd(c, SSD1306_HEIGHT - 1); // our display is only 32 pixels high
+    ret = ret || c->send_cmd(c, SSD1306_SET_MUX_RATIO); // set multiplex ratio
+    ret = ret || c->send_cmd(c, SSD1306_HEIGHT - 1); // our display is only 32 pixels high
 
-    c->send_cmd(c, SSD1306_SET_COM_OUT_DIR | 0x08); // set COM (common) output scan direction
+    ret = ret || c->send_cmd(c, SSD1306_SET_COM_OUT_DIR | 0x08); // set COM (common) output scan direction
     // scan from bottom up, COM[N-1] to COM0
 
-    c->send_cmd(c, SSD1306_SET_DISP_OFFSET); // set display offset
-    c->send_cmd(c, 0x00); // no offset
+    ret = ret || c->send_cmd(c, SSD1306_SET_DISP_OFFSET); // set display offset
+    ret = ret || c->send_cmd(c, 0x00); // no offset
 
-    c->send_cmd(c, SSD1306_SET_COM_PIN_CFG); // set COM (common) pins hardware configuration
-    c->send_cmd(c, 0x02); // manufacturer magic number
+    ret = ret || c->send_cmd(c, SSD1306_SET_COM_PIN_CFG); // set COM (common) pins hardware configuration
+    ret = ret || c->send_cmd(c, 0x02); // manufacturer magic number
 
     /* timing and driving scheme */
-    c->send_cmd(c, SSD1306_SET_DISP_CLK_DIV); // set display clock divide ratio
-    c->send_cmd(c, 0x80); // div ratio of 1, standard freq
+    ret = ret || c->send_cmd(c, SSD1306_SET_DISP_CLK_DIV); // set display clock divide ratio
+    ret = ret || c->send_cmd(c, 0x80); // div ratio of 1, standard freq
 
-    c->send_cmd(c, SSD1306_SET_PRECHARGE); // set pre-charge period
-    c->send_cmd(c, 0xF1); // Vcc internally generated on our board
+    ret = ret || c->send_cmd(c, SSD1306_SET_PRECHARGE); // set pre-charge period
+    ret = ret || c->send_cmd(c, 0xF1); // Vcc internally generated on our board
 
-    c->send_cmd(c, SSD1306_SET_VCOM_DESEL); // set VCOMH deselect level
-    c->send_cmd(c, 0x30); // 0.83xVcc
+    ret = ret || c->send_cmd(c, SSD1306_SET_VCOM_DESEL); // set VCOMH deselect level
+    ret = ret || c->send_cmd(c, 0x30); // 0.83xVcc
 
     /* display */
-    c->send_cmd(c, SSD1306_SET_CONTRAST); // set contrast control
-    c->send_cmd(c, 0xFF);
+    ret = ret || c->send_cmd(c, SSD1306_SET_CONTRAST); // set contrast control
+    ret = ret || c->send_cmd(c, 0xFF);
 
-    c->send_cmd(c, SSD1306_SET_DISPLAY_SOURCE | source_gddram); // set entire display on to follow RAM content
+    ret = ret || c->send_cmd(c, SSD1306_SET_DISPLAY_SOURCE | source_gddram); // set entire display on to follow RAM content
 
-    c->send_cmd(c, SSD1306_SET_NORM_INV); // set normal (not inverted) display
+    ret = ret || c->send_cmd(c, SSD1306_SET_NORM_INV); // set normal (not inverted) display
 
-    c->send_cmd(c, SSD1306_SET_CHARGE_PUMP); // set charge pump
-    c->send_cmd(c, 0x14); // Vcc internally generated on our board
+    ret = ret || c->send_cmd(c, SSD1306_SET_CHARGE_PUMP); // set charge pump
+    ret = ret || c->send_cmd(c, 0x14); // Vcc internally generated on our board
 
-    c->send_cmd(c, SSD1306_SET_SCROLL | 0x00); // deactivate horizontal scrolling if set
+    ret = ret || c->send_cmd(c, SSD1306_SET_SCROLL | 0x00); // deactivate horizontal scrolling if set
     // this is necessary as memory writes will corrupt if scrolling was enabled
 
     //prep the buffer (prefix the right command) and display ram (set the drawing area)
     c->buffer[0] = 0x40;
-    c->send_cmd(c, SSD1306_SET_COL_ADDR);
-    c->send_cmd(c, 0);
-    c->send_cmd(c, SSD1306_WIDTH-1);
-    c->send_cmd(c, SSD1306_SET_PAGE_ADDR);
-    c->send_cmd(c, 0);
-    c->send_cmd(c, SSD1306_PAGE_HEIGHT-1);
+    ret = ret || c->send_cmd(c, SSD1306_SET_COL_ADDR);
+    ret = ret || c->send_cmd(c, 0);
+    ret = ret || c->send_cmd(c, SSD1306_WIDTH-1);
+    ret = ret || c->send_cmd(c, SSD1306_SET_PAGE_ADDR);
+    ret = ret || c->send_cmd(c, 0);
+    ret = ret || c->send_cmd(c, SSD1306_PAGE_HEIGHT-1);
 
     //clear the buffer and the graphical display ram
     memset(c->buffer+1, 0x00, SSD1306_BUF_LEN);
-    c->update_gddram(c);
+    ret = ret || c->update_gddram(c);
 
-    c->send_cmd(c, SSD1306_SET_DISP | 0x01); // turn display on
+    ret = ret || c->send_cmd(c, SSD1306_SET_DISP | 0x01); // turn display on
 
-    return 0;
+    return ret;
 }
 
 int ssd1306_set_source(oled_canvas_t *c, display_source_t source) {
@@ -127,7 +123,7 @@ int ssd1306_set_source(oled_canvas_t *c, display_source_t source) {
 }
 
 int ssd1306_update_gddram(oled_canvas_t *c) {
-    c->send_buffer(c);
+    return c->send_buffer(c);
 }
 
 oled_canvas_t oled_create_ssd1306oI2c(i2c_inst_t *hw_addr) {
@@ -159,7 +155,7 @@ int oled_update_gddram(oled_canvas_t *c) {
 
 int oled_destroy(oled_canvas_t *c) {
     free(c->buffer);
-    return 0;
+    return PICO_OK;
 }
 
 

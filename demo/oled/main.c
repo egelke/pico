@@ -6,6 +6,7 @@
 #include "egelke_oled.h"
 
 void main() {
+    int ret;
     stdio_init_all();
 
     bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
@@ -18,14 +19,21 @@ void main() {
     gpio_pull_up(PICO_DEFAULT_I2C_SCL_PIN);
 
     oled_canvas_t c = oled_create_ssd1306oI2c(i2c0);
-    oled_init(&c);
+    ret = oled_init(&c);
+    if (ret != PICO_OK) goto error;
 
     while(true) {
-        oled_set_source(&c, source_all_on);
+        ret = oled_set_source(&c, source_all_on);
+        if (ret != PICO_OK) goto error;
         sleep_ms(500);
-        oled_set_source(&c, source_gddram);
+        ret = oled_set_source(&c, source_gddram);
+        if (ret != PICO_OK) goto error;
         sleep_ms(500);
     }
 
     oled_destroy(&c);
+    return;
+
+error:
+    printf("failed with error %x", ret);
 }
