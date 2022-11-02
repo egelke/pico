@@ -107,7 +107,7 @@ int init_ssd1306(oled_canvas_t *c) {
     ret = ret || c->send_cmd(c, SSD1306_WIDTH-1);
     ret = ret || c->send_cmd(c, SSD1306_SET_PAGE_ADDR);
     ret = ret || c->send_cmd(c, 0);
-    ret = ret || c->send_cmd(c, SSD1306_PAGE_HEIGHT-1);
+    ret = ret || c->send_cmd(c, SSD1306_NUM_PAGES-1);
 
     //clear the buffer and the graphical display ram
     memset(c->buffer+1, 0x00, SSD1306_BUF_LEN);
@@ -126,6 +126,17 @@ int ssd1306_update_gddram(oled_canvas_t *c) {
     return c->send_buffer(c);
 }
 
+int ssd1306_draw_hline(oled_canvas_t *c, uint8_t x1, uint8_t y1, uint8_t x2) {
+    uint8_t page_index = y1 >> 3;
+    uint8_t page_mask = 0x01 << (y1 & 0x03);
+
+    int offset = 1 + page_index * SSD1306_WIDTH;
+    for(int i=x1 + offset; i<=x2 + offset; i++) {
+        c->buffer[i] |= page_mask;
+    }
+    return PICO_OK;
+}
+
 oled_canvas_t oled_create_ssd1306oI2c(i2c_inst_t *hw_addr) {
     oled_canvas_t canvas;
 
@@ -135,6 +146,7 @@ oled_canvas_t oled_create_ssd1306oI2c(i2c_inst_t *hw_addr) {
     canvas.init = init_ssd1306;
     canvas.set_source = ssd1306_set_source;
     canvas.update_gddram = ssd1306_update_gddram;
+    canvas.draw_hline = ssd1306_draw_hline;
     canvas.send_cmd = ssd1306oI2c_send_cmd;
     canvas.send_buffer = ssd1306oI2c_send_buffer;
 
@@ -147,6 +159,10 @@ int oled_init(oled_canvas_t *c) {
 
 int oled_set_source(oled_canvas_t *c, display_source_t source) {
     return c->set_source(c, source);
+}
+
+int oled_draw_hline(oled_canvas_t *c, uint8_t x1, uint8_t y1, uint8_t x2) {
+    return c->draw_hline(c, x1, y1, x2);
 }
 
 int oled_update_gddram(oled_canvas_t *c) {

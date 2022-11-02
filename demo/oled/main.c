@@ -22,7 +22,8 @@ void main() {
     ret = oled_init(&c);
     if (ret != PICO_OK) goto error;
 
-    while(true) {
+    int i=3;
+    while(i--) {
         ret = oled_set_source(&c, source_all_on);
         if (ret != PICO_OK) goto error;
         sleep_ms(500);
@@ -30,6 +31,12 @@ void main() {
         if (ret != PICO_OK) goto error;
         sleep_ms(500);
     }
+
+    oled_draw_hline(&c, 0, 0, 127);
+    oled_draw_hline(&c, 10, 20, 100);
+    oled_draw_hline(&c, 20, 23, 60);
+    oled_draw_hline(&c, 0, 31, 127);
+    oled_update_gddram(&c);
 
     oled_destroy(&c);
     return;

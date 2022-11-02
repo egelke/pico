@@ -10,6 +10,7 @@ enum display_source;
 typedef int (*fn_oled_init)(struct oled_canvas *c);
 typedef int (*fn_oled_set_source)(struct oled_canvas *c, enum display_source source);
 typedef int (*fn_oled_update_gddram)(struct oled_canvas *c);
+typedef int (*fn_oled_draw_hline)(struct oled_canvas *c, uint8_t x1, uint8_t y1, uint8_t x2);
 typedef int (*fn_oled_send_cmd)(struct oled_canvas *c, uint8_t cmd);
 typedef int (*fn_oled_send_buffer)(struct oled_canvas *c);
 
@@ -20,6 +21,7 @@ typedef struct oled_canvas {
     fn_oled_init init;
     fn_oled_set_source set_source;
     fn_oled_update_gddram update_gddram;
+    fn_oled_draw_hline draw_hline;
     fn_oled_send_cmd send_cmd;
     fn_oled_send_buffer send_buffer;
 } oled_canvas_t;
@@ -34,6 +36,9 @@ oled_canvas_t oled_create_ssd1306oI2c(i2c_inst_t *hw_addr);
 int oled_init(oled_canvas_t *c);
 int oled_set_source(oled_canvas_t *c, display_source_t source);
 int oled_update_gddram(oled_canvas_t *c);
+
+int oled_draw_hline(oled_canvas_t *c, uint8_t x1, uint8_t y1, uint8_t x2);
+
 int oled_destroy(oled_canvas_t *c);
 
 #endif
