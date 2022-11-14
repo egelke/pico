@@ -5,10 +5,13 @@
 #include "interface.h"
 #include <stdlib.h>
 
-typedef int (*fn_lcd_init)(lcd_device_t *c);
-typedef int (*fn_lcd_shift_view)(lcd_device_t *c, shift_direction_t dir);
+typedef struct lcd_device_priv lcd_device_priv_t;
 
-typedef struct lcd_device_priv {
+typedef int (*fn_lcd_init)(lcd_device_priv_t *d);
+typedef int (*fn_lcd_set_cursor)(lcd_device_priv_t *d, uint8_t column, uint8_t line);
+typedef int (*fn_lcd_shift_view)(lcd_device_priv_t *d, shift_direction_t dir);
+
+struct lcd_device_priv {
 //public
     LCD_DEVICE_PUB
 
@@ -17,8 +20,9 @@ typedef struct lcd_device_priv {
     lcd_intf_meta_t intf_meta;
 
     fn_lcd_init init;
+    fn_lcd_set_cursor set_cursor;
     fn_lcd_shift_view shift_view; 
-} lcd_device_priv_t;
+};
 
 inline lcd_device_priv_t* lcd_convert_device(lcd_device_t* d) {
     return (lcd_device_priv_t*) d;

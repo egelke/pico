@@ -50,11 +50,10 @@
 #define JHD1804_5x8DOTS         0x00
 
 
-int jhd1804_init(lcd_device_t *d) {
+int jhd1804_init(lcd_device_priv_t *d) {
     int ret = LCD_OK;
-    lcd_device_priv_t *dp = lcd_convert_device(d);
-    lcd_intf_t *intf = *(dp->intf);
-    lcd_intf_meta_t *meta = &(dp->intf_meta);
+    lcd_intf_t *intf = *(d->intf);
+    lcd_intf_meta_t *meta = &(d->intf_meta);
 
     sleep_ms(50); //wait for the led to start
 
@@ -74,10 +73,15 @@ int jhd1804_init(lcd_device_t *d) {
     return ret;
 }
 
-int jhd1804_shift_view(lcd_device_t *d, shift_direction_t dir) {
-    lcd_device_priv_t *dp = lcd_convert_device(d);
-    lcd_intf_t *intf = *(dp->intf);
-    return intf->send_cmd(intf, &(dp->intf_meta), JHD1804_CURSORSHIFT | JHD1804_DISPLAYMOVE | dir);
+int jhd1804_set_cursor(lcd_device_priv_t *d, uint8_t column, uint8_t line) {
+    lcd_intf_t *intf = *(d->intf);
+    uint8_t offset = (line * JHD1804_MEM_COLUMNS) +  column;
+    return intf->send_cmd(intf, &(d->intf_meta), JHD1804_SETDDRAMADDR | offset);
+}
+
+int jhd1804_shift_view(lcd_device_priv_t *d, shift_direction_t dir) {
+    lcd_intf_t *intf = *(d->intf);
+    return intf->send_cmd(intf, &(d->intf_meta), JHD1804_CURSORSHIFT | JHD1804_DISPLAYMOVE | dir);
 }
 
 
@@ -95,6 +99,7 @@ lcd_device_t* lcd_create_jhd1804(lcd_intf_t **intf) {
     //private
     d->intf_meta.i2c_addr = JHD1804_I2C_ADDRESS;
     d->init = jhd1804_init;
+    d->set_cursor = jhd1804_set_cursor;
     d->shift_view = jhd1804_shift_view;
 
     return (lcd_device_t*) d;

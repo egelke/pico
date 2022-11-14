@@ -38,6 +38,7 @@ typedef struct lcd_device {
 
 int lcd_init(lcd_device_t *d);
 int lcd_write_str(lcd_device_t *d, const char * str);
+int lcd_set_cursor(lcd_device_t *d, uint8_t column, uint8_t line);
 int lcd_shift_view(lcd_device_t *d, shift_direction_t dir);
 
 #endif

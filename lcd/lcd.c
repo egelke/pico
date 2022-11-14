@@ -268,7 +268,16 @@ int lcd_init(lcd_device_t *d) {
     if (dp->init == NULL)
         return LCD_WARN_NOTDEF;
 
-    return dp->init(d);
+    return dp->init(dp);
+}
+
+int lcd_set_cursor(lcd_device_t *d, uint8_t column, uint8_t line) {
+    lcd_device_priv_t *dp = lcd_convert_device(d);
+
+    if (dp->init == NULL)
+        return LCD_WARN_NOTDEF;
+
+    return dp->set_cursor(dp, column, line);
 }
 
 int lcd_write_str(lcd_device_t *d, const char * str) {
@@ -299,5 +308,5 @@ int lcd_shift_view(lcd_device_t *d, shift_direction_t dir) {
     if (dp->shift_view == NULL) 
         return LCD_WARN_NOTDEF;
 
-    return dp->shift_view(d, dir);
+    return dp->shift_view(dp, dir);
 }
