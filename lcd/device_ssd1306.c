@@ -18,6 +18,9 @@
 #define SSD1306_SET_MEM_ADDR        0x20
 #define SSD1306_SET_COL_ADDR        0x21
 #define SSD1306_SET_PAGE_ADDR       0x22
+#define SSD1306_SET_COL_START_ADDR_LOW 0x00
+#define SSD1306_SET_COL_START_ADDR_HIGH 0x10
+#define SSD1306_SET_PAGE_START_ADDR 0xB0
 #define SSD1306_SET_DISP_START_LINE 0x40
 #define SSD1306_SET_SEG_REMAP       0xA0
 #define SSD1306_SET_MUX_RATIO       0xA8
@@ -136,6 +139,19 @@ int ssd1306_init(lcd_device_priv_t *d) {
     return ret;
 }
 
+int ssd1306_set_cursor(lcd_device_priv_t *d, uint8_t column, uint8_t line) {
+    int ret = LCD_OK;
+    lcd_intf_t *intf = *(d->intf);
+    //TODO::SET COLUMN ADDRESS
+
+    uint8_t pixel_column = column * EMUL_FONT_WITH;
+    ret |= intf->send_cmd(intf, &(d->intf_meta), SSD1306_SET_COL_START_ADDR_LOW | (pixel_column & 0x0F));
+    ret |= intf->send_cmd(intf, &(d->intf_meta), SSD1306_SET_COL_START_ADDR_HIGH | (pixel_column >> 4));
+    ret |= intf->send_cmd(intf, &(d->intf_meta), SSD1306_SET_PAGE_START_ADDR | line);
+
+    return ret;
+}
+
 
 lcd_device_t *lcd_create_ssd1306_emul(lcd_intf_t **intf) {
     lcd_device_priv_t *d = lcd_create_device(intf, MAX_STR_LEN * EMUL_FONT_WITH);
@@ -148,7 +164,7 @@ lcd_device_t *lcd_create_ssd1306_emul(lcd_intf_t **intf) {
 
     d->intf_meta.i2c_addr = SSD1306_I2C_ADDRESS;
     d->init = ssd1306_init;
-    d->set_cursor = NULL;
+    d->set_cursor = ssd1306_set_cursor;
     d->shift_view = NULL;
 
     return  (lcd_device_t *)d;

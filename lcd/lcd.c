@@ -274,7 +274,7 @@ int lcd_init(lcd_device_t *d) {
 int lcd_set_cursor(lcd_device_t *d, uint8_t column, uint8_t line) {
     lcd_device_priv_t *dp = lcd_convert_device(d);
 
-    if (dp->init == NULL)
+    if (dp->set_cursor == NULL)
         return LCD_WARN_NOTDEF;
 
     return dp->set_cursor(dp, column, line);

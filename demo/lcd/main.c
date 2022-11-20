@@ -33,21 +33,21 @@ int main() {
     if (!ssd1306) goto error;
 
     ret |= lcd_init(jhd1804);
-    ret |= lcd_write_str(jhd1804, "Hello Alycia, Laura & Darya!");
+    ret |= lcd_write_str(jhd1804, "Hello");
+    ret |= lcd_set_cursor(jhd1804, 1, 1);
+    ret |= lcd_write_str(jhd1804, "Alycia, Laura & Darya!");
     if (ret) goto error;
 
     ret |= lcd_init(ssd1306);
-    ret |= lcd_write_str(ssd1306, "Hello Alycia, Laura & Darya!  ");
+    ret |= lcd_write_str(ssd1306, "Hello Alycia, Laura & Darya!");
+    ret |= lcd_set_cursor(ssd1306, 1, 2);
     ret |= lcd_write_str(ssd1306, "Groetjes van Tato");
     if (ret) goto error;
 
     repeating_timer_t timer;
     add_repeating_timer_ms(-1000, rtcb_shift_view_left, jhd1804, &timer);
 
-    int i = 40;
-    while(i--) {
-        sleep_ms(1000);
-    }
+    sleep_ms(40 * 1000);
 
     cancel_repeating_timer(&timer);
     free(jhd1804);

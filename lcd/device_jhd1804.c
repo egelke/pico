@@ -75,7 +75,7 @@ int jhd1804_init(lcd_device_priv_t *d) {
 
 int jhd1804_set_cursor(lcd_device_priv_t *d, uint8_t column, uint8_t line) {
     lcd_intf_t *intf = *(d->intf);
-    uint8_t offset = (line * JHD1804_MEM_COLUMNS) +  column;
+    uint8_t offset = (line << 6) +  column; //b6 is line & b0-5 is column, see https://github.com/Seeed-Studio/Grove_LCD_RGB_Backlight/blob/master/rgb_lcd.cpp#L154
     return intf->send_cmd(intf, &(d->intf_meta), JHD1804_SETDDRAMADDR | offset);
 }
 
